@@ -1,24 +1,4 @@
-// const { Schema, model, SchemaTypes } = require('mongoose')
-// const shoppingListSchema = new Schema({
-//     userId: {
-//         type: String,
-//         required: true,
-//         immutable: true,
-//         validate: {
-//             validator: value => Number.isInteger(Number(value)) && value.length === 6,
-//         },
-//     },
-//     entries: [
-//         {
-//             type: SchemaTypes.ObjectId,
-//             ref: 'ShoppingListEntry',
-//         },
-//     ],
-// })
-
-
-// module.exports = model('ShoppingList', shoppingListSchema)
-const { Schema, model, SchemaTypes } = require('mongoose');
+const { Schema, model, SchemaTypes } = require('mongoose')
 
 const shoppingListSchema = new Schema({
     userId: {
@@ -26,16 +6,20 @@ const shoppingListSchema = new Schema({
         required: true,
         immutable: true,
         validate: {
-            validator: value => Number.isInteger(Number(value)) && value.length === 6,
-            message: props => `${props.value} ist kein gültiges Alter!`
-        }
+            validator: (value) => Number.isInteger(Number(value)) && value.length === 6,
+        },
     },
     entries: [
         {
             type: SchemaTypes.ObjectId,
-            ref: 'ShoppingListEntry'
-        }
-    ]
-});
+            ref: 'ShoppingListEntry',
+        },
+    ],
+})
 
-module.exports = model('ShoppingList', shoppingListSchema);
+shoppingListSchema.pre('deleteOne', { document: true, query: false }, async function (next) {
+    await model('ShoppingListEntry').deleteMany({ shoppingListSchema: this._id })
+    next()
+})
+
+module.exports = model('ShoppingList', shoppingListSchema)
